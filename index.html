@@ -9,7 +9,7 @@
             direction: rtl;
             padding: 20px;
         }
-        label, select, button {
+        label, select, button, input {
             font-size: 16px;
             margin: 10px 0;
         }
@@ -30,10 +30,21 @@
 </head>
 <body>
     <h1>עריכות אחרונות של עורכי ויקיפדיה</h1>
-    <label for="editorSelect">בחר שם משתמש:</label>
+    <label for="editorSelect">בחר שם משתמש מהרשימה או הקלד ידנית:</label><br>
     <select id="editorSelect">
         <option value="">-- בחר --</option>
     </select>
+    <br>
+    <input type="text" id="editorInput" placeholder="או כתוב שם משתמש חופשי..." />
+    <br>
+    <label for="dateRange">בחר טווח תאריכים:</label><br>
+    <select id="dateRange">
+        <option value="7">7 ימים אחרונים</option>
+        <option value="30">30 ימים אחרונים</option>
+        <option value="90">90 ימים אחרונים</option>
+        <option value="180">180 ימים אחרונים</option>
+    </select>
+    <br>
     <button onclick="searchEdits()">חפש</button>
 
     <table id="resultsTable" style="display:none;">
@@ -43,7 +54,8 @@
                 <th>תאריך עריכה</th>
                 <th>הערות</th>
                 <th>גודל השינוי</th>
-                <th>קישור לגרסה הקודמת</th>
+                <th>גרסה קודמת</th>
+                <th>קישור לערך</th>
             </tr>
         </thead>
         <tbody>
@@ -67,15 +79,19 @@
         };
 
         async function searchEdits() {
-            const username = document.getElementById('editorSelect').value;
+            const selectValue = document.getElementById('editorSelect').value;
+            const inputValue = document.getElementById('editorInput').value.trim();
+            const username = inputValue || selectValue;
+            const dateRange = parseInt(document.getElementById('dateRange').value);
+
             const table = document.getElementById('resultsTable');
             const tbody = table.querySelector('tbody');
             tbody.innerHTML = '';
 
-            if (!username) return alert('יש לבחור שם משתמש');
+            if (!username) return alert('יש לבחור או להזין שם משתמש');
 
             const now = new Date();
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const sinceDate = new Date(now.getTime() - dateRange * 24 * 60 * 60 * 1000);
 
             const url = `https://he.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=${encodeURIComponent(username)}&uclimit=50&ucprop=title|timestamp|comment|sizediff|ids&format=json&origin=*`;
 
@@ -86,10 +102,10 @@
                 const data = await response.json();
                 const contribs = data?.query?.usercontribs || [];
 
-                const filtered = contribs.filter(edit => new Date(edit.timestamp) >= weekAgo);
+                const filtered = contribs.filter(edit => new Date(edit.timestamp) >= sinceDate);
 
                 if (!filtered.length) {
-                    tbody.innerHTML = '<tr><td colspan="5">לא נמצאו עריכות ב-7 הימים האחרונים</td></tr>';
+                    tbody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות ב-${dateRange} הימים האחרונים</td></tr>`;
                     table.style.display = 'table';
                     return;
                 }
@@ -97,6 +113,7 @@
                 filtered.forEach(edit => {
                     const row = document.createElement('tr');
                     const diffUrl = `https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}`;
+                    const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
 
                     row.innerHTML = `
                         <td>${edit.title}</td>
@@ -104,6 +121,7 @@
                         <td>${edit.comment || ''}</td>
                         <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
                         <td><a href="${diffUrl}" target="_blank">צפה</a></td>
+                        <td><a href="${pageUrl}" target="_blank">לערך</a></td>
                     `;
                     tbody.appendChild(row);
                 });
