@@ -101,126 +101,102 @@
     </div>
 
 <script>
-    const editors = [...'פ._קהלת,יאיר_דב,מאגמה,הא_בהא_טליה,מיכאל_משיכון_בבלי,ויקי4800,סנסן_ליאיר,יושב_אוהל,בן_דרוסאי,אגלי_טל_קהלת,אגלי_טל,נתן טוביאס,דגן דיגן,יחיאל הלוי,מגבל,משה_כוכבי,דוגדוגוש,אדם ס.,ראב\"ד1785,יצחק_צבי,מיכאלל,צור_החלמיש,סבורני,בן-צור,חדש_תחת_השמש,מוישימי,מיכאל.צבאן,בורה_בורה,נת-_ה-,מר_נוסטלגיה,יעקב,זה_רק_אני,דרגון,שלוימי_הויקיפדיסט,הכרמלית,טוען,אורי9,ג._אלישע,רב_חתם,ענן_אנונימי,כל_הארץ_דגלים,אחיה_חיים,ותן_טל,גארפילד,אבי_גרינצייג,בתציון87,Effib,Shlomo9080,Atbannett,Yehud830,Eladkarmel,Yyy774,Sb236,Meirneria,EnoshAn,Viki.coo,Yts24,ChedvaE,DeepDemo,Gilgamesh,Yuri'.split(',')];
+const editors = [...'פ._קהלת,יאיר_דב,מאגמה,הא_בהא_טליה,מיכאל_משיכון_בבלי,ויקי4800,סנסן_ליאיר,יושב_אוהל,בן_דרוסאי,אגלי_טל_קהלת,אגלי_טל,נתן טוביאס,דגן דיגן,יחיאל הלוי,מגבל,משה_כוכבי,דוגדוגוש,אדם ס.,ראב"ד1785,יצחק_צבי,מיכאלל,צור_החלמיש,סבורני,בן-צור,חדש_תחת_השמש,מוישימי,מיכאל.צבאן,בורה_בורה,נת-_ה-,מר_נוסטלגיה,יעקב,זה_רק_אני,דרגון,שלוימי_הויקיפדיסט,הכרמלית,טוען,אורי9,ג._אלישע,רב_חתם,ענן_אנונימי,כל_הארץ_דגלים,אחיה_חיים,ותן_טל,גארפילד,אבי_גרינצייג,בתציון87,Effib,Shlomo9080,Atbannett,Yehud830,Eladkarmel,Yyy774,Sb236,Meirneria,EnoshAn,Viki.coo,Yts24,ChedvaE,DeepDemo,Gilgamesh,Yuri'.split(',')];
 
-    window.onload = () => {
-        const select = document.getElementById('editorSelect');
-        editors.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            select.appendChild(option);
-        });
+window.onload = () => {
+    const select = document.getElementById('editorSelect');
+    editors.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    });
+    const urlParams = new URLSearchParams(window.location.search);
+    const userParam = urlParams.get('user');
+    const daysParam = urlParams.get('days');
+    if (userParam) document.getElementById('editorInput').value = userParam;
+    if (daysParam) document.getElementById('dateRange').value = daysParam;
+    if (userParam || daysParam) searchEdits();
+};
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const userParam = urlParams.get('user');
-        const daysParam = urlParams.get('days');
-        if (userParam) document.getElementById('editorInput').value = userParam;
-        if (daysParam) document.getElementById('dateRange').value = daysParam;
-        if (userParam || daysParam) searchEdits();
-    };
+function copyShareLink() {
+    const editor = document.getElementById('editorInput').value.trim() || document.getElementById('editorSelect').value;
+    const days = document.getElementById('dateRange').value;
+    if (!editor) return alert('יש לבחור או להזין שם משתמש');
+    const base = window.location.origin + window.location.pathname;
+    const link = `${base}?user=${encodeURIComponent(editor)}&days=${encodeURIComponent(days)}`;
+    navigator.clipboard.writeText(link).then(() => alert('הקישור הועתק ללוח!'));
+}
 
-    function copyShareLink() {
-        const editor = document.getElementById('editorInput').value.trim() || document.getElementById('editorSelect').value;
-        const days = document.getElementById('dateRange').value;
-        if (!editor) return alert('יש לבחור או להזין שם משתמש');
-
-        const base = window.location.origin + window.location.pathname;
-        const link = `${base}?user=${encodeURIComponent(editor)}&days=${encodeURIComponent(days)}`;
-
-        navigator.clipboard.writeText(link).then(() => {
-            alert('הקישור הועתק ללוח!');
-        }).catch(() => {
-            alert('לא ניתן להעתיק ללוח');
-        });
-    }
-
-    function searchEdits() {
-        const selectValue = document.getElementById('editorSelect').value;
-        const inputValue = document.getElementById('editorInput').value.trim();
-        const username = inputValue || selectValue;
-        const dateRange = parseInt(document.getElementById('dateRange').value);
-
-        const resultsTable = document.getElementById('resultsTable');
-        const resultsBody = resultsTable.querySelector('tbody');
-        resultsBody.innerHTML = '';
-
-        const summaryTable = document.getElementById('summaryTable');
-        const summaryBody = summaryTable.querySelector('tbody');
-        summaryBody.innerHTML = '';
-
-        if (!username) return alert('יש לבחור או להזין שם משתמש');
-
-        const now = new Date();
-        const sinceDate = new Date(now.getTime() - dateRange * 24 * 60 * 60 * 1000);
-
-        const url = `https://he.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=${encodeURIComponent(username)}&uclimit=500&ucprop=title|timestamp|comment|sizediff|ids&format=json&origin=*`;
-
-        fetch(url)
-            .then(response => {
-                if (!response.ok) throw new Error(`סטטוס שגוי: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                const contribs = data?.query?.usercontribs || [];
-                const filtered = contribs.filter(edit => new Date(edit.timestamp) >= sinceDate);
-
-                if (!filtered.length) {
-                    resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות ב-${dateRange} הימים האחרונים</td></tr>`;
-                    resultsTable.style.display = 'table';
-                    summaryTable.style.display = 'none';
-                    return;
-                }
-
-                filtered.forEach(edit => {
-                    const row = document.createElement('tr');
-                    const diffUrl = `https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}`;
-                    const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
-                    row.innerHTML = `
-                        <td>${edit.title}</td>
-                        <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
-                        <td>${edit.comment || ''}</td>
-                        <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
-                        <td><a href="${diffUrl}" target="_blank">צפה</a></td>
-                        <td><a href="${pageUrl}" target="_blank">לערך</a></td>
-                    `;
-                    resultsBody.appendChild(row);
-                });
-
+function searchEdits() {
+    const selectValue = document.getElementById('editorSelect').value;
+    const inputValue = document.getElementById('editorInput').value.trim();
+    const username = inputValue || selectValue;
+    const dateRange = parseInt(document.getElementById('dateRange').value);
+    const resultsTable = document.getElementById('resultsTable');
+    const resultsBody = resultsTable.querySelector('tbody');
+    resultsBody.innerHTML = '';
+    const summaryTable = document.getElementById('summaryTable');
+    const summaryBody = summaryTable.querySelector('tbody');
+    summaryBody.innerHTML = '';
+    if (!username) return alert('יש לבחור או להזין שם משתמש');
+    const sinceDate = new Date(Date.now() - dateRange * 86400000);
+    const url = `https://he.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=${encodeURIComponent(username)}&uclimit=500&ucprop=title|timestamp|comment|sizediff|ids&format=json&origin=*`;
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const contribs = data?.query?.usercontribs || [];
+            const filtered = contribs.filter(edit => new Date(edit.timestamp) >= sinceDate);
+            if (!filtered.length) {
+                resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
                 resultsTable.style.display = 'table';
-
-                const summaryMap = {};
-                filtered.forEach(edit => {
-                    if (!summaryMap[edit.title]) {
-                        summaryMap[edit.title] = { count: 0, lastEdit: new Date(edit.timestamp) };
-                    }
-                    summaryMap[edit.title].count++;
-                    const editTime = new Date(edit.timestamp);
-                    if (editTime > summaryMap[edit.title].lastEdit) {
-                        summaryMap[edit.title].lastEdit = editTime;
-                    }
-                });
-
-                const summaryRows = Object.entries(summaryMap)
-                    .sort((a, b) => b[1].count - a[1].count)
-                    .slice(0, 5);
-
-                summaryRows.forEach(([title, data]) => {
+                summaryTable.style.display = 'none';
+                return;
+            }
+            filtered.forEach(edit => {
+                const row = document.createElement('tr');
+                const diffUrl = `https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}`;
+                const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
+                row.innerHTML = `
+                    <td>${edit.title}</td>
+                    <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
+                    <td>${edit.comment || ''}</td>
+                    <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
+                    <td><a href="${diffUrl}" target="_blank">צפה</a></td>
+                    <td><a href="${pageUrl}" target="_blank">לערך</a></td>`;
+                resultsBody.appendChild(row);
+            });
+            resultsTable.style.display = 'table';
+            const summaryMap = {};
+            filtered.forEach(edit => {
+                if (!summaryMap[edit.title]) {
+                    summaryMap[edit.title] = { count: 0, lastEdit: new Date(edit.timestamp) };
+                }
+                summaryMap[edit.title].count++;
+                const editTime = new Date(edit.timestamp);
+                if (editTime > summaryMap[edit.title].lastEdit) {
+                    summaryMap[edit.title].lastEdit = editTime;
+                }
+            });
+            Object.entries(summaryMap)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 5)
+                .forEach(([title, data]) => {
                     const row = document.createElement('tr');
+                    const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
                     row.innerHTML = `
-                        <td>${title}</td>
+                        <td><a href="${pageUrl}" target="_blank">${title}</a></td>
                         <td>${data.count}</td>
-                        <td>${data.lastEdit.toLocaleString('he-IL')}</td>
-                    `;
+                        <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
                     summaryBody.appendChild(row);
                 });
-                summaryTable.style.display = 'table';
-            })
-            .catch(error => {
-                console.error('שגיאה בטעינת הנתונים:', error);
-                alert('אירעה שגיאה בטעינת הנתונים. ודא שאתה פותח את הדף משרת מקומי או אתר מאובטח.');
-            });
-    }
+            summaryTable.style.display = 'table';
+        })
+        .catch(err => {
+            console.error(err);
+            alert('שגיאה בטעינת הנתונים');
+        });
+}
 </script>
 </body>
 </html>
