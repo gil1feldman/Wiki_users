@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>עריכות אחרונות של עורכי ויקיפדיה</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            padding: 20px;
+        }
+        label, select, button {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>עריכות אחרונות של עורכי ויקיפדיה</h1>
+    <label for="editorSelect">בחר שם משתמש:</label>
+    <select id="editorSelect">
+        <option value="">-- בחר --</option>
+    </select>
+    <button onclick="searchEdits()">חפש</button>
+
+    <table id="resultsTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>שם הערך</th>
+                <th>תאריך עריכה</th>
+                <th>הערות</th>
+                <th>גודל השינוי</th>
+                <th>קישור לגרסה הקודמת</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- תוצאות יוזנו כאן -->
+        </tbody>
+    </table>
+
+    <script>
+        const editors = [
+            'פ._קהלת','יאיר_דב','מאגמה','הא_בהא_טליה','מיכאל_משיכון_בבלי','ויקי4800','סנסן_ליאיר','יושב_אוהל','בן_דרוסאי','אגלי_טל_קהלת','אגלי_טל','נתן טוביאס','דגן דיגן','יחיאל הלוי','מגבל','משה_כוכבי','דוגדוגוש','אדם ס.','ראב"ד1785','יצחק_צבי','מיכאלל','צור_החלמיש','סבורני','בן-צור','חדש_תחת_השמש','מוישימי','מיכאל.צבאן','בורה_בורה','נת-_ה-','מר_נוסטלגיה','יעקב','זה_רק_אני','דרגון','שלוימי_הויקיפדיסט','הכרמלית','טוען','אורי9','ג._אלישע','רב_חתם','ענן_אנונימי','כל_הארץ_דגלים','אחיה_חיים','ותן_טל','גארפילד','אבי_גרינצייג','בתציון87','Effib','Shlomo9080','Atbannett','Yehud830','Eladkarmel','Yyy774','Sb236','Meirneria','EnoshAn','Viki.coo','Yts24','ChedvaE','DeepDemo','Gilgamesh','Yuri'
+        ];
+
+        window.onload = () => {
+            const select = document.getElementById('editorSelect');
+            editors.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        };
+
+        async function searchEdits() {
+            const username = document.getElementById('editorSelect').value;
+            const table = document.getElementById('resultsTable');
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            if (!username) return alert('יש לבחור שם משתמש');
+
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            const url = `https://he.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=${encodeURIComponent(username)}&uclimit=50&ucprop=title|timestamp|comment|sizediff|ids&format=json&origin=*`;
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`סטטוס שגוי: ${response.status}`);
+
+                const data = await response.json();
+                const contribs = data?.query?.usercontribs || [];
+
+                const filtered = contribs.filter(edit => new Date(edit.timestamp) >= weekAgo);
+
+                if (!filtered.length) {
+                    tbody.innerHTML = '<tr><td colspan="5">לא נמצאו עריכות ב-7 הימים האחרונים</td></tr>';
+                    table.style.display = 'table';
+                    return;
+                }
+
+                filtered.forEach(edit => {
+                    const row = document.createElement('tr');
+                    const diffUrl = `https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}`;
+
+                    row.innerHTML = `
+                        <td>${edit.title}</td>
+                        <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
+                        <td>${edit.comment || ''}</td>
+                        <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
+                        <td><a href="${diffUrl}" target="_blank">צפה</a></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                table.style.display = 'table';
+            } catch (error) {
+                console.error('שגיאה בטעינת הנתונים:', error);
+                alert('אירעה שגיאה בטעינת הנתונים. ודא שאתה פותח את הדף משרת מקומי או אתר מאובטח.');
+            }
+        }
+    </script>
+</body>
+</html>
