@@ -4,49 +4,15 @@
     <meta charset="UTF-8">
     <title>עריכות אחרונות של עורכי ויקיפדיה</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            direction: rtl;
-            padding: 20px;
-        }
-        label, select, button, input {
-            font-size: 16px;
-            margin: 10px 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #f0f0f0;
-        }
-        .flex-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 40px;
-            align-items: flex-start;
-        }
-        .form-area {
-            min-width: 260px;
-            max-width: 300px;
-        }
-        .table-area {
-            flex: 1;
-        }
-        .share-button {
-            margin-top: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            cursor: pointer;
-        }
+        body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; }
+        label, select, button, input { font-size: 16px; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f0f0f0; }
+        .flex-container { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+        .form-area { min-width: 260px; max-width: 300px; }
+        .table-area { flex: 1; }
+        .share-button { margin-top: 10px; background-color: #007BFF; color: white; border: none; padding: 8px 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -54,11 +20,6 @@
     <div class="flex-container">
         <div class="form-area">
             <input type="text" id="editorInput" placeholder="כתוב שם משתמש חופשי..." />
-            <br>
-            <label for="editorSelect">או בחר שם משתמש מהרשימה:</label><br>
-            <select id="editorSelect">
-                <option value="">-- בחר --</option>
-            </select>
             <br>
             <label for="dateRange">בחר טווח תאריכים:</label><br>
             <select id="dateRange">
@@ -101,16 +62,7 @@
     </div>
 
 <script>
-const editors = [...'פ._קהלת,יאיר_דב,מאגמה,הא_בהא_טליה,מיכאל_משיכון_בבלי,ויקי4800,סנסן_ליאיר,יושב_אוהל,בן_דרוסאי,אגלי_טל_קהלת,אגלי_טל,נתן טוביאס,דגן דיגן,יחיאל הלוי,מגבל,משה_כוכבי,דוגדוגוש,אדם ס.,ראב"ד1785,יצחק_צבי,מיכאלל,צור_החלמיש,סבורני,בן-צור,חדש_תחת_השמש,מוישימי,מיכאל.צבאן,בורה_בורה,נת-_ה-,מר_נוסטלגיה,יעקב,זה_רק_אני,דרגון,שלוימי_הויקיפדיסט,הכרמלית,טוען,אורי9,ג._אלישע,רב_חתם,ענן_אנונימי,כל_הארץ_דגלים,אחיה_חיים,ותן_טל,גארפילד,אבי_גרינצייג,בתציון87,Effib,Shlomo9080,Atbannett,Yehud830,Eladkarmel,Yyy774,Sb236,Meirneria,EnoshAn,Viki.coo,Yts24,ChedvaE,DeepDemo,Gilgamesh,Yuri'.split(',')];
-
 window.onload = () => {
-    const select = document.getElementById('editorSelect');
-    editors.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        select.appendChild(option);
-    });
     const urlParams = new URLSearchParams(window.location.search);
     const userParam = urlParams.get('user');
     const daysParam = urlParams.get('days');
@@ -120,7 +72,7 @@ window.onload = () => {
 };
 
 function copyShareLink() {
-    const editor = document.getElementById('editorInput').value.trim() || document.getElementById('editorSelect').value;
+    const editor = document.getElementById('editorInput').value.trim();
     const days = document.getElementById('dateRange').value;
     if (!editor) return alert('יש לבחור או להזין שם משתמש');
     const base = window.location.origin + window.location.pathname;
@@ -129,9 +81,8 @@ function copyShareLink() {
 }
 
 function searchEdits() {
-    const selectValue = document.getElementById('editorSelect').value;
     const inputValue = document.getElementById('editorInput').value.trim();
-    const username = inputValue || selectValue;
+    const username = inputValue;
     const dateRange = parseInt(document.getElementById('dateRange').value);
     const resultsTable = document.getElementById('resultsTable');
     const resultsBody = resultsTable.querySelector('tbody');
