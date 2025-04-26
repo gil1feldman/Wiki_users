@@ -22,6 +22,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-radius: 8px;
             margin-top: 20px;
+            padding: 10px;
         }
         table {
             width: 100%;
@@ -79,14 +80,6 @@
             border-radius: 6px;
             box-sizing: border-box;
         }
-        a {
-            color: #007BFF;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
         .action-link {
             display: inline-block;
             padding: 6px 10px;
@@ -107,6 +100,11 @@
             color: white;
             border-radius: 4px;
             font-size: 14px;
+        }
+        .table-title {
+            margin-top: 30px;
+            font-size: 22px;
+            font-weight: bold;
         }
         @media (max-width: 768px) {
             .flex-container {
@@ -137,33 +135,39 @@
         </div>
 
         <div class="table-area">
-            <div class="table-wrapper">
-                <table id="summaryTable" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th>שם הערך</th>
-                            <th>מספר עריכות</th>
-                            <th>תאריך עריכה אחרון</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div id="resultsSection" style="display:none;">
+                <div class="table-title">פירוט עריכות</div>
+                <div class="table-wrapper">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>שם הערך</th>
+                                <th>תאריך עריכה</th>
+                                <th>הערות</th>
+                                <th>גודל השינוי</th>
+                                <th>גרסה קודמת</th>
+                                <th>קישור לערך</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="table-wrapper">
-                <table id="resultsTable" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th>שם הערך</th>
-                            <th>תאריך עריכה</th>
-                            <th>הערות</th>
-                            <th>גודל השינוי</th>
-                            <th>גרסה קודמת</th>
-                            <th>קישור לערך</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <div id="summarySection" style="display:none;">
+                <div class="table-title">סיכום לפי ערכים</div>
+                <div class="table-wrapper">
+                    <table id="summaryTable">
+                        <thead>
+                            <tr>
+                                <th>שם הערך</th>
+                                <th>מספר עריכות</th>
+                                <th>תאריך עריכה אחרון</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -196,6 +200,8 @@ function searchEdits() {
     const summaryBody = summaryTable.querySelector('tbody');
     resultsBody.innerHTML = '';
     summaryBody.innerHTML = '';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('summarySection').style.display = 'none';
     if (!username) return alert('יש לבחור או להזין שם משתמש');
 
     const sinceDate = new Date(Date.now() - dateRange * 86400000);
@@ -208,10 +214,10 @@ function searchEdits() {
             const filtered = contribs.filter(edit => new Date(edit.timestamp) >= sinceDate);
             if (!filtered.length) {
                 resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
-                resultsTable.style.display = 'table';
-                summaryTable.style.display = 'none';
+                document.getElementById('resultsSection').style.display = 'block';
                 return;
             }
+
             filtered.forEach(edit => {
                 const row = document.createElement('tr');
                 const diffLink = (edit.parentid && edit.parentid !== 0)
@@ -227,7 +233,7 @@ function searchEdits() {
                     <td><a href="${pageUrl}" target="_blank" class="action-link">לערך</a></td>`;
                 resultsBody.appendChild(row);
             });
-            resultsTable.style.display = 'table';
+            document.getElementById('resultsSection').style.display = 'block';
 
             const summaryMap = {};
             filtered.forEach(edit => {
@@ -253,7 +259,7 @@ function searchEdits() {
                         <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
                     summaryBody.appendChild(row);
                 });
-            summaryTable.style.display = 'table';
+            document.getElementById('summarySection').style.display = 'block';
         })
         .catch(err => {
             console.error(err);
