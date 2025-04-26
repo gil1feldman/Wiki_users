@@ -87,6 +87,19 @@
         a:hover {
             text-decoration: underline;
         }
+        .action-link {
+            display: inline-block;
+            padding: 6px 10px;
+            background-color: #28a745;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .action-link:hover {
+            background-color: #218838;
+        }
         @media (max-width: 768px) {
             .flex-container {
                 flex-direction: column;
@@ -200,8 +213,8 @@ function searchEdits() {
                     <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
                     <td>${edit.comment || ''}</td>
                     <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
-                    <td><a href="${diffUrl}" target="_blank">צפה</a></td>
-                    <td><a href="${pageUrl}" target="_blank">לערך</a></td>`;
+                    <td><a href="${diffUrl}" target="_blank" class="action-link">צפה</a></td>
+                    <td><a href="${pageUrl}" target="_blank" class="action-link">לערך</a></td>`;
                 resultsBody.appendChild(row);
             });
             resultsTable.style.display = 'table';
