@@ -1,234 +1,200 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <meta charset="UTF-8">
-    <title>עריכות אחרונות של עורכי ויקיפדיה</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; margin: 0; background-color: #f9f9f9; }
-        label, select, button, input { font-size: 16px; margin: 10px 0; }
-        .table-wrapper { width: 100%; overflow-x: auto; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; margin-top: 20px; padding: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { border-bottom: 1px solid #ddd; padding: 12px 8px; text-align: center; }
-        th { background-color: #007BFF; color: white; font-weight: bold; }
-        tr:hover { background-color: #f1f1f1; }
-        .flex-container { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
-        .form-area { width: 100%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: flex-start; }
-        .form-row > div { flex: 1 1 180px; min-width: 150px; display: flex; align-items: center; gap: 6px; }
-        .form-row input, .form-row select { flex: 1; }
-        .table-area { flex: 1; min-width: 300px; }
-        .share-button, button { background-color: #007BFF; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 6px; transition: background-color 0.3s; }
-        .share-button:hover, button:hover { background-color: #0056b3; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .action-link { display: inline-block; padding: 6px 10px; background-color: #28a745; color: white; border-radius: 4px; text-decoration: none; font-size: 14px; transition: background-color 0.3s; }
-        .action-link:hover { background-color: #218838; }
-        .no-action { display: inline-block; padding: 6px 10px; background-color: #6c757d; color: white; border-radius: 4px; font-size: 14px; }
-        .table-title { margin-top: 30px; font-size: 22px; font-weight: bold; }
-        @media (max-width: 768px) {
-            .form-row { flex-direction: column; }
-            .form-row > div { width: 100%; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>עריכות אחרונות של עורכי ויקיפדיה</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; margin: 0; background: #f9f9f9; }
+    .form-row > div { display: flex; align-items: center; gap: 6px; }
+    .share-button, button {
+      background-color: #007BFF; color: white; border: none; padding: 10px 16px;
+      cursor: pointer; border-radius: 6px; transition: background-color 0.3s;
+    }
+    .share-button:hover, button:hover { background-color: #0056b3; }
+    .table-wrapper { overflow-x: auto; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th, td { padding: 12px 8px; border-bottom: 1px solid #ddd; text-align: center; }
+    th { background-color: #007BFF; color: white; }
+    .action-link { background-color: #28a745; color: white; padding: 6px 10px; border-radius: 4px; text-decoration: none; }
+    .no-action { background-color: #6c757d; color: white; padding: 6px 10px; border-radius: 4px; }
+    .form-area { margin-bottom: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    input, select {
+      width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;
+      font-size: 16px; box-sizing: border-box;
+    }
+    @media (max-width: 768px) {
+      .form-row { flex-direction: column; }
+      .form-row > div { width: 100%; }
+    }
+  </style>
 </head>
 <body>
 <h1>עריכות אחרונות של עורכי ויקיפדיה</h1>
+
 <div class="form-area">
-    <div class="form-row">
-        <div><i class="fas fa-user"></i><input type="text" id="editorInput" placeholder="שם משתמש" /></div>
-        <div>
-            <i class="fas fa-file-alt"></i>
-            <input type="text" id="titleInput" placeholder="שם ערך" list="titleSuggestions" disabled />
-            <datalist id="titleSuggestions"></datalist>
-        </div>
-        <div><i class="fas fa-calendar"></i>
-            <select id="dateRange">
-                <option value="7">7 ימים אחרונים</option>
-                <option value="30">30 ימים אחרונים</option>
-                <option value="90">90 ימים אחרונים</option>
-                <option value="180">180 ימים אחרונים</option>
-            </select>
-        </div>
-        <div><i class="fas fa-filter"></i>
-            <select id="editType">
-                <option value="">הכל</option>
-                <option value="add">הוספה</option>
-                <option value="remove">מחיקה</option>
-                <option value="new">יצירת ערך חדש</option>
-            </select>
-        </div>
-        <div><button onclick="searchEdits()"><i class="fas fa-search"></i> חפש</button></div>
-        <div><button class="share-button" onclick="copyShareLink()"><i class="fas fa-share-alt"></i> שתף קישור</button></div>
+  <div class="form-row">
+    <div><i class="fas fa-user"></i><input type="text" id="editorInput" placeholder="שם משתמש" /></div>
+    <div>
+      <i class="fas fa-file-alt"></i>
+      <input type="text" id="titleInput" placeholder="שם ערך" list="titleSuggestions" disabled />
+      <datalist id="titleSuggestions"></datalist>
     </div>
+    <div><i class="fas fa-calendar"></i>
+      <select id="dateRange">
+        <option value="7">7 ימים אחרונים</option>
+        <option value="30">30 ימים אחרונים</option>
+        <option value="90">90 ימים אחרונים</option>
+        <option value="180">180 ימים אחרונים</option>
+      </select>
+    </div>
+    <div><i class="fas fa-filter"></i>
+      <select id="editType">
+        <option value="">הכל</option>
+        <option value="add">הוספה</option>
+        <option value="remove">מחיקה</option>
+        <option value="new">יצירת ערך חדש</option>
+      </select>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="share-button" onclick="copyShareLink()"><i class="fas fa-share-alt"></i> שתף קישור</button>
+      <button class="share-button" onclick="exportCSV()"><i class="fas fa-file-csv"></i> ייצא ל־CSV</button>
+    </div>
+    <div><button onclick="searchEdits()"><i class="fas fa-search"></i> חפש</button></div>
+  </div>
 </div>
 
-<div class="flex-container">
-    <div class="table-area">
-        <div id="summarySection" style="display:none;">
-            <div class="table-title">סיכום לפי ערכים</div>
-            <div class="table-wrapper">
-                <table id="summaryTable">
-                    <thead>
-                    <tr>
-                        <th>שם הערך</th>
-                        <th>מספר עריכות</th>
-                        <th>תאריך עריכה אחרון</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="resultsSection" style="display:none;">
-            <div class="table-title">פירוט עריכות</div>
-            <div class="table-wrapper">
-                <table id="resultsTable">
-                    <thead>
-                    <tr>
-                        <th>שם הערך</th>
-                        <th>תאריך עריכה</th>
-                        <th>הערות</th>
-                        <th>גודל השינוי</th>
-                        <th>גרסה קודמת</th>
-                        <th>קישור לערך</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<div class="table-wrapper">
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>שם הערך</th>
+        <th>תאריך עריכה</th>
+        <th>הערות</th>
+        <th>גודל השינוי</th>
+        <th>גרסה קודמת</th>
+        <th>קישור לערך</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
+
+<datalist id="titleSuggestions"></datalist>
 
 <script>
 let loadedEdits = [];
 
 window.onload = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const userParam = urlParams.get('user');
-    const daysParam = urlParams.get('days');
-    if (userParam) document.getElementById('editorInput').value = userParam;
-    if (daysParam) document.getElementById('dateRange').value = daysParam;
-    if (userParam || daysParam) searchEdits();
+  const urlParams = new URLSearchParams(window.location.search);
+  const userParam = urlParams.get('user');
+  const daysParam = urlParams.get('days');
+  if (userParam) document.getElementById('editorInput').value = userParam;
+  if (daysParam) document.getElementById('dateRange').value = daysParam;
+  if (userParam || daysParam) searchEdits();
 };
 
 document.getElementById('editType').addEventListener('change', applyFilters);
 
 function copyShareLink() {
-    const editor = document.getElementById('editorInput').value.trim();
-    const days = document.getElementById('dateRange').value;
-    if (!editor) return alert('יש לבחור או להזין שם משתמש');
-    const base = window.location.origin + window.location.pathname;
-    const link = `${base}?user=${encodeURIComponent(editor)}&days=${encodeURIComponent(days)}`;
-    navigator.clipboard.writeText(link).then(() => alert('הקישור הועתק ללוח!'));
+  const editor = document.getElementById('editorInput').value.trim();
+  const days = document.getElementById('dateRange').value;
+  if (!editor) return alert('יש לבחור או להזין שם משתמש');
+  const base = window.location.origin + window.location.pathname;
+  const link = `${base}?user=${encodeURIComponent(editor)}&days=${encodeURIComponent(days)}`;
+  navigator.clipboard.writeText(link).then(() => alert('הקישור הועתק ללוח!'));
 }
 
 function searchEdits() {
-    const username = document.getElementById('editorInput').value.trim();
-    const dateRange = parseInt(document.getElementById('dateRange').value);
-    if (!username) return alert('יש לבחור או להזין שם משתמש');
+  const username = document.getElementById('editorInput').value.trim();
+  const dateRange = parseInt(document.getElementById('dateRange').value);
+  if (!username) return alert('יש לבחור או להזין שם משתמש');
 
-    const sinceDate = new Date(Date.now() - dateRange * 86400000);
-    const url = `https://he.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=${encodeURIComponent(username)}&uclimit=500&ucprop=title|timestamp|comment|sizediff|ids&format=json&origin=*`;
+  const sinceDate = new Date(Date.now() - dateRange * 86400000);
+  const url = `https://he.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=${encodeURIComponent(username)}&uclimit=500&ucprop=title|timestamp|comment|sizediff|ids&format=json&origin=*`;
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            loadedEdits = (data?.query?.usercontribs || []).filter(edit => new Date(edit.timestamp) >= sinceDate);
-            document.getElementById('titleInput').disabled = false;
-            applyFilters();
-        })
-        .catch(err => {
-            console.error(err);
-            alert('שגיאה בטעינת הנתונים');
-        });
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      loadedEdits = (data?.query?.usercontribs || []).filter(edit => new Date(edit.timestamp) >= sinceDate);
+      document.getElementById('titleInput').disabled = false;
+      applyFilters();
+    })
+    .catch(err => {
+      console.error(err);
+      alert('שגיאה בטעינת הנתונים');
+    });
 }
 
 function applyFilters() {
-    const titleFilter = document.getElementById('titleInput').value.trim().toLowerCase();
-    const editType = document.getElementById('editType').value;
+  const titleFilter = document.getElementById('titleInput').value.trim().toLowerCase();
+  const editType = document.getElementById('editType').value;
 
-    const filtered = loadedEdits.filter(edit => {
-        const matchesTitle = !titleFilter || edit.title.toLowerCase().includes(titleFilter);
-        let matchesType = true;
-        if (editType === 'add') matchesType = edit.sizediff > 0 && edit.parentid !== 0;
-        else if (editType === 'remove') matchesType = edit.sizediff < 0;
-        else if (editType === 'new') matchesType = edit.parentid === 0;
-        return matchesTitle && matchesType;
-    });
+  const filtered = loadedEdits.filter(edit => {
+    const matchesTitle = !titleFilter || edit.title.toLowerCase().includes(titleFilter);
+    let matchesType = true;
+    if (editType === 'add') matchesType = edit.sizediff > 0 && edit.parentid !== 0;
+    else if (editType === 'remove') matchesType = edit.sizediff < 0;
+    else if (editType === 'new') matchesType = edit.parentid === 0;
+    return matchesTitle && matchesType;
+  });
 
-    renderTables(filtered);
-    renderSuggestions(filtered);
+  renderTable(filtered);
+  renderSuggestions(filtered);
 }
 
-function renderTables(filtered) {
-    const resultsBody = document.getElementById('resultsTable').querySelector('tbody');
-    const summaryBody = document.getElementById('summaryTable').querySelector('tbody');
-    resultsBody.innerHTML = '';
-    summaryBody.innerHTML = '';
-    document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('summarySection').style.display = 'none';
+function renderTable(filtered) {
+  const resultsBody = document.querySelector("#resultsTable tbody");
+  resultsBody.innerHTML = '';
 
-    if (!filtered.length) {
-        resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
-        document.getElementById('resultsSection').style.display = 'block';
-        return;
-    }
+  if (!filtered.length) {
+    resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
+    return;
+  }
 
-    filtered.forEach(edit => {
-        const row = document.createElement('tr');
-        const diffLink = (edit.parentid && edit.parentid !== 0)
-            ? `<a href="https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}" target="_blank" class="action-link">צפה</a>`
-            : `<span class="no-action">עריכה חדשה</span>`;
-        const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
-        row.innerHTML = `
-            <td>${edit.title}</td>
-            <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
-            <td>${edit.comment || ''}</td>
-            <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
-            <td>${diffLink}</td>
-            <td><a href="${pageUrl}" target="_blank" class="action-link">לערך</a></td>`;
-        resultsBody.appendChild(row);
-    });
-    document.getElementById('resultsSection').style.display = 'block';
-
-    const summaryMap = {};
-    filtered.forEach(edit => {
-        if (!summaryMap[edit.title]) {
-            summaryMap[edit.title] = { count: 0, lastEdit: new Date(edit.timestamp) };
-        }
-        summaryMap[edit.title].count++;
-        const editTime = new Date(edit.timestamp);
-        if (editTime > summaryMap[edit.title].lastEdit) {
-            summaryMap[edit.title].lastEdit = editTime;
-        }
-    });
-
-    Object.entries(summaryMap)
-        .sort((a, b) => b[1].count - a[1].count)
-        .slice(0, 5)
-        .forEach(([title, data]) => {
-            const row = document.createElement('tr');
-            const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
-            row.innerHTML = `
-                <td><a href="${pageUrl}" target="_blank">${title}</a></td>
-                <td>${data.count}</td>
-                <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
-            summaryBody.appendChild(row);
-        });
-    document.getElementById('summarySection').style.display = 'block';
+  filtered.forEach(edit => {
+    const row = document.createElement('tr');
+    const diffLink = (edit.parentid && edit.parentid !== 0)
+      ? `<a href="https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}" target="_blank" class="action-link">צפה</a>`
+      : `<span class="no-action">עריכה חדשה</span>`;
+    const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
+    row.innerHTML = `
+      <td>${edit.title}</td>
+      <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
+      <td>${edit.comment || ''}</td>
+      <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
+      <td>${diffLink}</td>
+      <td><a href="${pageUrl}" target="_blank" class="action-link">לערך</a></td>`;
+    resultsBody.appendChild(row);
+  });
 }
 
 function renderSuggestions(filtered) {
-    const titleSuggestions = [...new Set(filtered.map(edit => edit.title))];
-    const dataList = document.getElementById('titleSuggestions');
-    dataList.innerHTML = '';
-    titleSuggestions.forEach(title => {
-        const option = document.createElement('option');
-        option.value = title;
-        dataList.appendChild(option);
-    });
+  const titles = [...new Set(filtered.map(edit => edit.title))];
+  const dataList = document.getElementById('titleSuggestions');
+  dataList.innerHTML = '';
+  titles.forEach(title => {
+    const option = document.createElement('option');
+    option.value = title;
+    dataList.appendChild(option);
+  });
+}
+
+function exportCSV() {
+  const rows = Array.from(document.querySelectorAll("#resultsTable tr"));
+  if (rows.length < 2) return alert("אין נתונים לייצוא");
+
+  const csv = rows.map(row => {
+    const cells = Array.from(row.querySelectorAll("th, td"));
+    return cells.map(cell => `"${cell.innerText.replace(/"/g, '""')}"`).join(",");
+  }).join("\n");
+
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "wiki_edits.csv";
+  link.click();
 }
 </script>
 </body>
