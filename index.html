@@ -36,7 +36,11 @@
 <div class="form-area">
     <div class="form-row">
         <div><i class="fas fa-user"></i><input type="text" id="editorInput" placeholder="שם משתמש" /></div>
-        <div><i class="fas fa-file-alt"></i><input type="text" id="titleInput" placeholder="שם ערך" /></div>
+        <div>
+            <i class="fas fa-file-alt"></i>
+            <input type="text" id="titleInput" placeholder="שם ערך" list="titleSuggestions" disabled />
+            <datalist id="titleSuggestions"></datalist>
+        </div>
         <div><i class="fas fa-calendar"></i>
             <select id="dateRange">
                 <option value="7">7 ימים אחרונים</option>
@@ -170,6 +174,7 @@ function searchEdits() {
             });
             document.getElementById('resultsSection').style.display = 'block';
 
+            // הצגת סיכום
             const summaryMap = {};
             filtered.forEach(edit => {
                 if (!summaryMap[edit.title]) {
@@ -195,6 +200,17 @@ function searchEdits() {
                     summaryBody.appendChild(row);
                 });
             document.getElementById('summarySection').style.display = 'block';
+
+            // הפעלת שדה שם ערך + הצעות
+            document.getElementById('titleInput').disabled = false;
+            const titleSuggestions = [...new Set(filtered.map(edit => edit.title))];
+            const dataList = document.getElementById('titleSuggestions');
+            dataList.innerHTML = '';
+            titleSuggestions.forEach(title => {
+                const option = document.createElement('option');
+                option.value = title;
+                dataList.appendChild(option);
+            });
         })
         .catch(err => {
             console.error(err);
