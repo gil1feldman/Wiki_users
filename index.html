@@ -141,6 +141,7 @@ function searchEdits() {
       loadedEdits = (data?.query?.usercontribs || []).filter(edit => new Date(edit.timestamp) >= sinceDate);
       document.getElementById('titleInput').disabled = false;
       applyFilters();
+      if (document.getElementById('chartContainer').style.display !== 'none') renderChart();
     })
     .catch(err => {
       console.error(err);
@@ -165,6 +166,35 @@ function applyFilters() {
   renderSummary(filtered);
   renderSuggestions(filtered);
   if (document.getElementById('chartContainer').style.display !== 'none') renderChart();
+}
+
+function renderChart() {
+  if (!loadedEdits.length) {
+    alert('לא קיימים נתונים להצגה. אנא בצע חיפוש קודם.');
+    return;
+  }
+  const granularity = document.getElementById('granularity').value;
+  const counts = {};
+  loadedEdits.forEach(edit => {
+    const date = new Date(edit.timestamp);
+    let key;
+    if (granularity === 'day') key = date.toISOString().split('T')[0];
+    else if (granularity === 'week') {
+      const d = new Date(date);
+      d.setDate(d.getDate() - d.getDay());
+      key = d.toISOString().split('T')[0];
+    } else if (granularity === 'month') key = `${date.getFullYear()}-${('0'+(date.getMonth()+1)).slice(-2)}`;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  const labels = Object.keys(counts).sort();
+  const data = labels.map(l => counts[l]);
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('editChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'מספר עריכות', data, backgroundColor: '#007BFF' }] },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
 }
 
 function renderTable(filtered) {
@@ -230,31 +260,6 @@ function toggleChart() {
   const container = document.getElementById('chartContainer');
   container.style.display = container.style.display === 'none' ? 'block' : 'none';
   if (container.style.display === 'block') renderChart();
-}
-
-function renderChart() {
-  const granularity = document.getElementById('granularity').value;
-  const counts = {};
-  loadedEdits.forEach(edit => {
-    const date = new Date(edit.timestamp);
-    let key;
-    if (granularity === 'day') key = date.toISOString().split('T')[0];
-    else if (granularity === 'week') {
-      const d = new Date(date);
-      d.setDate(d.getDate() - d.getDay());
-      key = d.toISOString().split('T')[0];
-    } else if (granularity === 'month') key = `${date.getFullYear()}-${('0'+(date.getMonth()+1)).slice(-2)}`;
-    counts[key] = (counts[key] || 0) + 1;
-  });
-  const labels = Object.keys(counts).sort();
-  const data = labels.map(l => counts[l]);
-  if (chart) chart.destroy();
-  const ctx = document.getElementById('editChart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ label: 'מספר עריכות', data, backgroundColor: '#007BFF' }] },
-    options: { responsive: true, plugins: { legend: { display: false } } }
-  });
 }
 
 function downloadChart() {
