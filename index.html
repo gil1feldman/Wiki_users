@@ -4,173 +4,90 @@
     <meta charset="UTF-8">
     <title>עריכות אחרונות של עורכי ויקיפדיה</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            direction: rtl;
-            padding: 20px;
-            margin: 0;
-            background-color: #f9f9f9;
-        }
-        label, select, button, input {
-            font-size: 16px;
-            margin: 10px 0;
-        }
-        .table-wrapper {
-            width: 100%;
-            overflow-x: auto;
-            background-color: #ffffff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            margin-top: 20px;
-            padding: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-        th, td {
-            border-bottom: 1px solid #ddd;
-            padding: 12px 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #007BFF;
-            color: white;
-            font-weight: bold;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-        .flex-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 40px;
-            align-items: flex-start;
-        }
-        .form-area {
-            min-width: 260px;
-            max-width: 300px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .table-area {
-            flex: 1;
-            min-width: 300px;
-        }
-        .share-button, button {
-            margin-top: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background-color 0.3s;
-        }
-        .share-button:hover, button:hover {
-            background-color: #0056b3;
-        }
-        input, select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        .action-link {
-            display: inline-block;
-            padding: 6px 10px;
-            background-color: #28a745;
-            color: white;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .action-link:hover {
-            background-color: #218838;
-        }
-        .no-action {
-            display: inline-block;
-            padding: 6px 10px;
-            background-color: #6c757d;
-            color: white;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .table-title {
-            margin-top: 30px;
-            font-size: 22px;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; margin: 0; background-color: #f9f9f9; }
+        label, select, button, input { font-size: 16px; margin: 10px 0; }
+        .table-wrapper { width: 100%; overflow-x: auto; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; margin-top: 20px; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 12px 8px; text-align: center; }
+        th { background-color: #007BFF; color: white; font-weight: bold; }
+        tr:hover { background-color: #f1f1f1; }
+        .flex-container { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+        .form-area { min-width: 260px; max-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .table-area { flex: 1; min-width: 300px; }
+        .share-button, button { margin-top: 10px; background-color: #007BFF; color: white; border: none; padding: 10px 16px; cursor: pointer; border-radius: 6px; transition: background-color 0.3s; }
+        .share-button:hover, button:hover { background-color: #0056b3; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .action-link { display: inline-block; padding: 6px 10px; background-color: #28a745; color: white; border-radius: 4px; text-decoration: none; font-size: 14px; transition: background-color 0.3s; }
+        .action-link:hover { background-color: #218838; }
+        .no-action { display: inline-block; padding: 6px 10px; background-color: #6c757d; color: white; border-radius: 4px; font-size: 14px; }
+        .table-title { margin-top: 30px; font-size: 22px; font-weight: bold; }
         @media (max-width: 768px) {
-            .flex-container {
-                flex-direction: column;
-            }
-            .form-area, .table-area {
-                max-width: 100%;
-            }
+            .flex-container { flex-direction: column; }
+            .form-area, .table-area { max-width: 100%; }
         }
     </style>
 </head>
 <body>
-    <h1>עריכות אחרונות של עורכי ויקיפדיה</h1>
-    <div class="flex-container">
-        <div class="form-area">
-            <input type="text" id="editorInput" placeholder="כתוב שם משתמש חופשי..." />
-            <br>
-            <label for="dateRange">בחר טווח תאריכים:</label><br>
-            <select id="dateRange">
-                <option value="7">7 ימים אחרונים</option>
-                <option value="30">30 ימים אחרונים</option>
-                <option value="90">90 ימים אחרונים</option>
-                <option value="180">180 ימים אחרונים</option>
-            </select>
-            <br>
-            <button onclick="searchEdits()">חפש</button>
-            <button class="share-button" onclick="copyShareLink()">שתף קישור</button>
+<h1>עריכות אחרונות של עורכי ויקיפדיה</h1>
+<div class="flex-container">
+    <div class="form-area">
+        <input type="text" id="editorInput" placeholder="כתוב שם משתמש חופשי..." />
+        <input type="text" id="titleInput" placeholder="חפש לפי שם ערך..." />
+        <label for="dateRange">בחר טווח תאריכים:</label>
+        <select id="dateRange">
+            <option value="7">7 ימים אחרונים</option>
+            <option value="30">30 ימים אחרונים</option>
+            <option value="90">90 ימים אחרונים</option>
+            <option value="180">180 ימים אחרונים</option>
+        </select>
+        <label for="editType">סוג עריכה:</label>
+        <select id="editType">
+            <option value="">הכל</option>
+            <option value="add">הוספה</option>
+            <option value="remove">מחיקה</option>
+            <option value="new">יצירת ערך חדש</option>
+        </select>
+        <button onclick="searchEdits()">חפש</button>
+        <button class="share-button" onclick="copyShareLink()">שתף קישור</button>
+    </div>
+
+    <div class="table-area">
+        <div id="summarySection" style="display:none;">
+            <div class="table-title">סיכום לפי ערכים</div>
+            <div class="table-wrapper">
+                <table id="summaryTable">
+                    <thead>
+                    <tr>
+                        <th>שם הערך</th>
+                        <th>מספר עריכות</th>
+                        <th>תאריך עריכה אחרון</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="table-area">
-            <div id="summarySection" style="display:none;">
-                <div class="table-title">סיכום לפי ערכים</div>
-                <div class="table-wrapper">
-                    <table id="summaryTable">
-                        <thead>
-                            <tr>
-                                <th>שם הערך</th>
-                                <th>מספר עריכות</th>
-                                <th>תאריך עריכה אחרון</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="resultsSection" style="display:none;">
-                <div class="table-title">פירוט עריכות</div>
-                <div class="table-wrapper">
-                    <table id="resultsTable">
-                        <thead>
-                            <tr>
-                                <th>שם הערך</th>
-                                <th>תאריך עריכה</th>
-                                <th>הערות</th>
-                                <th>גודל השינוי</th>
-                                <th>גרסה קודמת</th>
-                                <th>קישור לערך</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+        <div id="resultsSection" style="display:none;">
+            <div class="table-title">פירוט עריכות</div>
+            <div class="table-wrapper">
+                <table id="resultsTable">
+                    <thead>
+                    <tr>
+                        <th>שם הערך</th>
+                        <th>תאריך עריכה</th>
+                        <th>הערות</th>
+                        <th>גודל השינוי</th>
+                        <th>גרסה קודמת</th>
+                        <th>קישור לערך</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
 
 <script>
 window.onload = () => {
@@ -194,10 +111,10 @@ function copyShareLink() {
 function searchEdits() {
     const username = document.getElementById('editorInput').value.trim();
     const dateRange = parseInt(document.getElementById('dateRange').value);
-    const resultsTable = document.getElementById('resultsTable');
-    const resultsBody = resultsTable.querySelector('tbody');
-    const summaryTable = document.getElementById('summaryTable');
-    const summaryBody = summaryTable.querySelector('tbody');
+    const titleFilter = document.getElementById('titleInput').value.trim().toLowerCase();
+    const editType = document.getElementById('editType').value;
+    const resultsBody = document.getElementById('resultsTable').querySelector('tbody');
+    const summaryBody = document.getElementById('summaryTable').querySelector('tbody');
     resultsBody.innerHTML = '';
     summaryBody.innerHTML = '';
     document.getElementById('resultsSection').style.display = 'none';
@@ -211,7 +128,17 @@ function searchEdits() {
         .then(response => response.json())
         .then(data => {
             const contribs = data?.query?.usercontribs || [];
-            const filtered = contribs.filter(edit => new Date(edit.timestamp) >= sinceDate);
+            const filtered = contribs.filter(edit => {
+                const editTime = new Date(edit.timestamp);
+                const matchesDate = editTime >= sinceDate;
+                const matchesTitle = !titleFilter || edit.title.toLowerCase().includes(titleFilter);
+                let matchesType = true;
+                if (editType === 'add') matchesType = edit.sizediff > 0 && edit.parentid !== 0;
+                else if (editType === 'remove') matchesType = edit.sizediff < 0;
+                else if (editType === 'new') matchesType = edit.parentid === 0;
+                return matchesDate && matchesTitle && matchesType;
+            });
+
             if (!filtered.length) {
                 resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
                 document.getElementById('resultsSection').style.display = 'block';
