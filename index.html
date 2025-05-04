@@ -5,6 +5,7 @@
   <title>עריכות אחרונות של עורכי ויקיפדיה</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; margin: 0; background: #f9f9f9; }
     .form-row > div { display: flex; align-items: center; gap: 6px; }
@@ -30,6 +31,8 @@
       .form-row > div { width: 100%; }
     }
     .table-title { font-size: 20px; margin-top: 30px; font-weight: bold; }
+    #chartContainer { display: none; margin-top: 30px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    canvas { max-width: 100%; }
   </style>
 </head>
 <body>
@@ -62,6 +65,7 @@
     <div style="display: flex; gap: 10px;">
       <button class="share-button" onclick="copyShareLink()"><i class="fas fa-share-alt"></i> שתף קישור</button>
       <button class="share-button" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> ייצוא ל־Excel</button>
+      <button class="share-button" onclick="toggleChart()"><i class="fas fa-chart-line"></i> הצג גרף</button>
     </div>
     <div><button onclick="searchEdits()"><i class="fas fa-search"></i> חפש</button></div>
   </div>
@@ -98,8 +102,23 @@
   </table>
 </div>
 
+<div id="chartContainer">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>גרף עריכות</h2>
+    <div>
+      <select id="granularity" onchange="renderChart()">
+        <option value="day">יומי</option>
+        <option value="week">שבועי</option>
+        <option value="month">חודשי</option>
+      </select>
+      <button onclick="downloadChart()">הורד גרף</button>
+    </div>
+  </div>
+  <canvas id="editChart"></canvas>
+</div>
+
 <script>
-let loadedEdits = [];
+let loadedEdits = [], chart;
 
 function copyShareLink() {
   const editor = document.getElementById('editorInput').value.trim();
@@ -145,6 +164,7 @@ function applyFilters() {
   renderTable(filtered);
   renderSummary(filtered);
   renderSuggestions(filtered);
+  if (document.getElementById('chartContainer').style.display !== 'none') renderChart();
 }
 
 function renderTable(filtered) {
@@ -206,17 +226,52 @@ function renderSuggestions(filtered) {
   });
 }
 
+function toggleChart() {
+  const container = document.getElementById('chartContainer');
+  container.style.display = container.style.display === 'none' ? 'block' : 'none';
+  if (container.style.display === 'block') renderChart();
+}
+
+function renderChart() {
+  const granularity = document.getElementById('granularity').value;
+  const counts = {};
+  loadedEdits.forEach(edit => {
+    const date = new Date(edit.timestamp);
+    let key;
+    if (granularity === 'day') key = date.toISOString().split('T')[0];
+    else if (granularity === 'week') {
+      const d = new Date(date);
+      d.setDate(d.getDate() - d.getDay());
+      key = d.toISOString().split('T')[0];
+    } else if (granularity === 'month') key = `${date.getFullYear()}-${('0'+(date.getMonth()+1)).slice(-2)}`;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  const labels = Object.keys(counts).sort();
+  const data = labels.map(l => counts[l]);
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('editChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'מספר עריכות', data, backgroundColor: '#007BFF' }] },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+}
+
+function downloadChart() {
+  const link = document.createElement('a');
+  link.download = 'edit_chart.png';
+  link.href = chart.toBase64Image();
+  link.click();
+}
+
 function exportToExcel() {
   const wb = XLSX.utils.book_new();
   const resultsTable = document.querySelector('#resultsTable');
   const summaryTable = document.querySelector('#summaryTable');
-
   const ws1 = XLSX.utils.table_to_sheet(resultsTable);
   XLSX.utils.book_append_sheet(wb, ws1, 'פירוט עריכות');
-
   const ws2 = XLSX.utils.table_to_sheet(summaryTable);
   XLSX.utils.book_append_sheet(wb, ws2, 'סיכום ערכים');
-
   XLSX.writeFile(wb, 'wiki_edits.xlsx');
 }
 </script>
