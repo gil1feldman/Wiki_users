@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>עריכות אחרונות של עורכי ויקיפדיה</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; direction: rtl; padding: 20px; margin: 0; background: #f9f9f9; }
     .form-row > div { display: flex; align-items: center; gap: 6px; }
@@ -12,7 +13,7 @@
       cursor: pointer; border-radius: 6px; transition: background-color 0.3s;
     }
     .share-button:hover, button:hover { background-color: #0056b3; }
-    .table-wrapper { overflow-x: auto; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .table-wrapper { overflow-x: auto; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; }
     table { width: 100%; border-collapse: collapse; min-width: 600px; }
     th, td { padding: 12px 8px; border-bottom: 1px solid #ddd; text-align: center; }
     th { background-color: #007BFF; color: white; }
@@ -28,6 +29,7 @@
       .form-row { flex-direction: column; }
       .form-row > div { width: 100%; }
     }
+    .table-title { font-size: 20px; margin-top: 30px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -59,13 +61,14 @@
     </div>
     <div style="display: flex; gap: 10px;">
       <button class="share-button" onclick="copyShareLink()"><i class="fas fa-share-alt"></i> שתף קישור</button>
-      <button class="share-button" onclick="exportCSV()"><i class="fas fa-file-csv"></i> ייצא ל־CSV</button>
+      <button class="share-button" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> ייצוא ל־Excel</button>
     </div>
     <div><button onclick="searchEdits()"><i class="fas fa-search"></i> חפש</button></div>
   </div>
 </div>
 
 <div class="table-wrapper">
+  <div class="table-title">פירוט עריכות</div>
   <table id="resultsTable">
     <thead>
       <tr>
@@ -81,21 +84,22 @@
   </table>
 </div>
 
-<datalist id="titleSuggestions"></datalist>
+<div class="table-wrapper">
+  <div class="table-title">סיכום לפי ערכים</div>
+  <table id="summaryTable">
+    <thead>
+      <tr>
+        <th>שם הערך</th>
+        <th>מספר עריכות</th>
+        <th>תאריך עריכה אחרון</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
 <script>
 let loadedEdits = [];
-
-window.onload = () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const userParam = urlParams.get('user');
-  const daysParam = urlParams.get('days');
-  if (userParam) document.getElementById('editorInput').value = userParam;
-  if (daysParam) document.getElementById('dateRange').value = daysParam;
-  if (userParam || daysParam) searchEdits();
-};
-
-document.getElementById('editType').addEventListener('change', applyFilters);
 
 function copyShareLink() {
   const editor = document.getElementById('editorInput').value.trim();
@@ -110,12 +114,10 @@ function searchEdits() {
   const username = document.getElementById('editorInput').value.trim();
   const dateRange = parseInt(document.getElementById('dateRange').value);
   if (!username) return alert('יש לבחור או להזין שם משתמש');
-
   const sinceDate = new Date(Date.now() - dateRange * 86400000);
   const url = `https://he.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=${encodeURIComponent(username)}&uclimit=500&ucprop=title|timestamp|comment|sizediff|ids&format=json&origin=*`;
-
   fetch(url)
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
       loadedEdits = (data?.query?.usercontribs || []).filter(edit => new Date(edit.timestamp) >= sinceDate);
       document.getElementById('titleInput').disabled = false;
@@ -127,10 +129,11 @@ function searchEdits() {
     });
 }
 
+document.getElementById('editType').addEventListener('change', applyFilters);
+
 function applyFilters() {
   const titleFilter = document.getElementById('titleInput').value.trim().toLowerCase();
   const editType = document.getElementById('editType').value;
-
   const filtered = loadedEdits.filter(edit => {
     const matchesTitle = !titleFilter || edit.title.toLowerCase().includes(titleFilter);
     let matchesType = true;
@@ -139,34 +142,53 @@ function applyFilters() {
     else if (editType === 'new') matchesType = edit.parentid === 0;
     return matchesTitle && matchesType;
   });
-
   renderTable(filtered);
+  renderSummary(filtered);
   renderSuggestions(filtered);
 }
 
 function renderTable(filtered) {
-  const resultsBody = document.querySelector("#resultsTable tbody");
-  resultsBody.innerHTML = '';
-
+  const tbody = document.querySelector('#resultsTable tbody');
+  tbody.innerHTML = '';
   if (!filtered.length) {
-    resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="6">לא נמצאו עריכות</td></tr>';
     return;
   }
-
   filtered.forEach(edit => {
-    const row = document.createElement('tr');
-    const diffLink = (edit.parentid && edit.parentid !== 0)
-      ? `<a href="https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}" target="_blank" class="action-link">צפה</a>`
-      : `<span class="no-action">עריכה חדשה</span>`;
+    const tr = document.createElement('tr');
+    const diffLink = edit.parentid ? `<a href="https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}" target="_blank" class="action-link">צפה</a>` : '<span class="no-action">עריכה חדשה</span>';
     const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
-    row.innerHTML = `
+    tr.innerHTML = `
       <td>${edit.title}</td>
       <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
       <td>${edit.comment || ''}</td>
       <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
       <td>${diffLink}</td>
       <td><a href="${pageUrl}" target="_blank" class="action-link">לערך</a></td>`;
-    resultsBody.appendChild(row);
+    tbody.appendChild(tr);
+  });
+}
+
+function renderSummary(filtered) {
+  const summaryMap = {};
+  filtered.forEach(edit => {
+    if (!summaryMap[edit.title]) {
+      summaryMap[edit.title] = { count: 0, lastEdit: new Date(edit.timestamp) };
+    }
+    summaryMap[edit.title].count++;
+    const editTime = new Date(edit.timestamp);
+    if (editTime > summaryMap[edit.title].lastEdit) summaryMap[edit.title].lastEdit = editTime;
+  });
+  const tbody = document.querySelector('#summaryTable tbody');
+  tbody.innerHTML = '';
+  Object.entries(summaryMap).forEach(([title, data]) => {
+    const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><a href="${pageUrl}" target="_blank">${title}</a></td>
+      <td>${data.count}</td>
+      <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
+    tbody.appendChild(tr);
   });
 }
 
@@ -181,20 +203,18 @@ function renderSuggestions(filtered) {
   });
 }
 
-function exportCSV() {
-  const rows = Array.from(document.querySelectorAll("#resultsTable tr"));
-  if (rows.length < 2) return alert("אין נתונים לייצוא");
+function exportToExcel() {
+  const wb = XLSX.utils.book_new();
+  const resultsTable = document.querySelector('#resultsTable');
+  const summaryTable = document.querySelector('#summaryTable');
 
-  const csv = rows.map(row => {
-    const cells = Array.from(row.querySelectorAll("th, td"));
-    return cells.map(cell => `"${cell.innerText.replace(/"/g, '""')}"`).join(",");
-  }).join("\n");
+  const ws1 = XLSX.utils.table_to_sheet(resultsTable);
+  XLSX.utils.book_append_sheet(wb, ws1, 'פירוט עריכות');
 
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "wiki_edits.csv";
-  link.click();
+  const ws2 = XLSX.utils.table_to_sheet(summaryTable);
+  XLSX.utils.book_append_sheet(wb, ws2, 'סיכום ערכים');
+
+  XLSX.writeFile(wb, 'wiki_edits.xlsx');
 }
 </script>
 </body>
