@@ -102,6 +102,8 @@
 </div>
 
 <script>
+let loadedEdits = [];
+
 window.onload = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const userParam = urlParams.get('user');
@@ -110,6 +112,8 @@ window.onload = () => {
     if (daysParam) document.getElementById('dateRange').value = daysParam;
     if (userParam || daysParam) searchEdits();
 };
+
+document.getElementById('editType').addEventListener('change', applyFilters);
 
 function copyShareLink() {
     const editor = document.getElementById('editorInput').value.trim();
@@ -123,14 +127,6 @@ function copyShareLink() {
 function searchEdits() {
     const username = document.getElementById('editorInput').value.trim();
     const dateRange = parseInt(document.getElementById('dateRange').value);
-    const titleFilter = document.getElementById('titleInput').value.trim().toLowerCase();
-    const editType = document.getElementById('editType').value;
-    const resultsBody = document.getElementById('resultsTable').querySelector('tbody');
-    const summaryBody = document.getElementById('summaryTable').querySelector('tbody');
-    resultsBody.innerHTML = '';
-    summaryBody.innerHTML = '';
-    document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('summarySection').style.display = 'none';
     if (!username) return alert('יש לבחור או להזין שם משתמש');
 
     const sinceDate = new Date(Date.now() - dateRange * 86400000);
@@ -139,83 +135,100 @@ function searchEdits() {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            const contribs = data?.query?.usercontribs || [];
-            const filtered = contribs.filter(edit => {
-                const editTime = new Date(edit.timestamp);
-                const matchesDate = editTime >= sinceDate;
-                const matchesTitle = !titleFilter || edit.title.toLowerCase().includes(titleFilter);
-                let matchesType = true;
-                if (editType === 'add') matchesType = edit.sizediff > 0 && edit.parentid !== 0;
-                else if (editType === 'remove') matchesType = edit.sizediff < 0;
-                else if (editType === 'new') matchesType = edit.parentid === 0;
-                return matchesDate && matchesTitle && matchesType;
-            });
-
-            if (!filtered.length) {
-                resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
-                document.getElementById('resultsSection').style.display = 'block';
-                return;
-            }
-
-            filtered.forEach(edit => {
-                const row = document.createElement('tr');
-                const diffLink = (edit.parentid && edit.parentid !== 0)
-                    ? `<a href="https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}" target="_blank" class="action-link">צפה</a>`
-                    : `<span class="no-action">עריכה חדשה</span>`;
-                const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
-                row.innerHTML = `
-                    <td>${edit.title}</td>
-                    <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
-                    <td>${edit.comment || ''}</td>
-                    <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
-                    <td>${diffLink}</td>
-                    <td><a href="${pageUrl}" target="_blank" class="action-link">לערך</a></td>`;
-                resultsBody.appendChild(row);
-            });
-            document.getElementById('resultsSection').style.display = 'block';
-
-            // הצגת סיכום
-            const summaryMap = {};
-            filtered.forEach(edit => {
-                if (!summaryMap[edit.title]) {
-                    summaryMap[edit.title] = { count: 0, lastEdit: new Date(edit.timestamp) };
-                }
-                summaryMap[edit.title].count++;
-                const editTime = new Date(edit.timestamp);
-                if (editTime > summaryMap[edit.title].lastEdit) {
-                    summaryMap[edit.title].lastEdit = editTime;
-                }
-            });
-
-            Object.entries(summaryMap)
-                .sort((a, b) => b[1].count - a[1].count)
-                .slice(0, 5)
-                .forEach(([title, data]) => {
-                    const row = document.createElement('tr');
-                    const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
-                    row.innerHTML = `
-                        <td><a href="${pageUrl}" target="_blank">${title}</a></td>
-                        <td>${data.count}</td>
-                        <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
-                    summaryBody.appendChild(row);
-                });
-            document.getElementById('summarySection').style.display = 'block';
-
-            // הפעלת שדה שם ערך + הצעות
+            loadedEdits = (data?.query?.usercontribs || []).filter(edit => new Date(edit.timestamp) >= sinceDate);
             document.getElementById('titleInput').disabled = false;
-            const titleSuggestions = [...new Set(filtered.map(edit => edit.title))];
-            const dataList = document.getElementById('titleSuggestions');
-            dataList.innerHTML = '';
-            titleSuggestions.forEach(title => {
-                const option = document.createElement('option');
-                option.value = title;
-                dataList.appendChild(option);
-            });
+            applyFilters();
         })
         .catch(err => {
             console.error(err);
             alert('שגיאה בטעינת הנתונים');
         });
+}
+
+function applyFilters() {
+    const titleFilter = document.getElementById('titleInput').value.trim().toLowerCase();
+    const editType = document.getElementById('editType').value;
+
+    const filtered = loadedEdits.filter(edit => {
+        const matchesTitle = !titleFilter || edit.title.toLowerCase().includes(titleFilter);
+        let matchesType = true;
+        if (editType === 'add') matchesType = edit.sizediff > 0 && edit.parentid !== 0;
+        else if (editType === 'remove') matchesType = edit.sizediff < 0;
+        else if (editType === 'new') matchesType = edit.parentid === 0;
+        return matchesTitle && matchesType;
+    });
+
+    renderTables(filtered);
+    renderSuggestions(filtered);
+}
+
+function renderTables(filtered) {
+    const resultsBody = document.getElementById('resultsTable').querySelector('tbody');
+    const summaryBody = document.getElementById('summaryTable').querySelector('tbody');
+    resultsBody.innerHTML = '';
+    summaryBody.innerHTML = '';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('summarySection').style.display = 'none';
+
+    if (!filtered.length) {
+        resultsBody.innerHTML = `<tr><td colspan="6">לא נמצאו עריכות</td></tr>`;
+        document.getElementById('resultsSection').style.display = 'block';
+        return;
+    }
+
+    filtered.forEach(edit => {
+        const row = document.createElement('tr');
+        const diffLink = (edit.parentid && edit.parentid !== 0)
+            ? `<a href="https://he.wikipedia.org/w/index.php?diff=${edit.revid}&oldid=${edit.parentid}" target="_blank" class="action-link">צפה</a>`
+            : `<span class="no-action">עריכה חדשה</span>`;
+        const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(edit.title.replace(/ /g, '_'))}`;
+        row.innerHTML = `
+            <td>${edit.title}</td>
+            <td>${new Date(edit.timestamp).toLocaleString('he-IL')}</td>
+            <td>${edit.comment || ''}</td>
+            <td>${edit.sizediff > 0 ? '+' : ''}${edit.sizediff}</td>
+            <td>${diffLink}</td>
+            <td><a href="${pageUrl}" target="_blank" class="action-link">לערך</a></td>`;
+        resultsBody.appendChild(row);
+    });
+    document.getElementById('resultsSection').style.display = 'block';
+
+    const summaryMap = {};
+    filtered.forEach(edit => {
+        if (!summaryMap[edit.title]) {
+            summaryMap[edit.title] = { count: 0, lastEdit: new Date(edit.timestamp) };
+        }
+        summaryMap[edit.title].count++;
+        const editTime = new Date(edit.timestamp);
+        if (editTime > summaryMap[edit.title].lastEdit) {
+            summaryMap[edit.title].lastEdit = editTime;
+        }
+    });
+
+    Object.entries(summaryMap)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 5)
+        .forEach(([title, data]) => {
+            const row = document.createElement('tr');
+            const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
+            row.innerHTML = `
+                <td><a href="${pageUrl}" target="_blank">${title}</a></td>
+                <td>${data.count}</td>
+                <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
+            summaryBody.appendChild(row);
+        });
+    document.getElementById('summarySection').style.display = 'block';
+}
+
+function renderSuggestions(filtered) {
+    const titleSuggestions = [...new Set(filtered.map(edit => edit.title))];
+    const dataList = document.getElementById('titleSuggestions');
+    dataList.innerHTML = '';
+    titleSuggestions.forEach(title => {
+        const option = document.createElement('option');
+        option.value = title;
+        dataList.appendChild(option);
+    });
 }
 </script>
 </body>
