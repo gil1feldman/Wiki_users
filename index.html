@@ -68,6 +68,20 @@
 </div>
 
 <div class="table-wrapper">
+  <div class="table-title">סיכום לפי ערכים</div>
+  <table id="summaryTable">
+    <thead>
+      <tr>
+        <th>שם הערך</th>
+        <th>מספר עריכות</th>
+        <th>תאריך עריכה אחרון</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="table-wrapper">
   <div class="table-title">פירוט עריכות</div>
   <table id="resultsTable">
     <thead>
@@ -78,20 +92,6 @@
         <th>גודל השינוי</th>
         <th>גרסה קודמת</th>
         <th>קישור לערך</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<div class="table-wrapper">
-  <div class="table-title">סיכום לפי ערכים</div>
-  <table id="summaryTable">
-    <thead>
-      <tr>
-        <th>שם הערך</th>
-        <th>מספר עריכות</th>
-        <th>תאריך עריכה אחרון</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -181,15 +181,18 @@ function renderSummary(filtered) {
   });
   const tbody = document.querySelector('#summaryTable tbody');
   tbody.innerHTML = '';
-  Object.entries(summaryMap).forEach(([title, data]) => {
-    const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><a href="${pageUrl}" target="_blank">${title}</a></td>
-      <td>${data.count}</td>
-      <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
-    tbody.appendChild(tr);
-  });
+  Object.entries(summaryMap)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 5)
+    .forEach(([title, data]) => {
+      const pageUrl = `https://he.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><a href="${pageUrl}" target="_blank">${title}</a></td>
+        <td>${data.count}</td>
+        <td>${data.lastEdit.toLocaleString('he-IL')}</td>`;
+      tbody.appendChild(tr);
+    });
 }
 
 function renderSuggestions(filtered) {
